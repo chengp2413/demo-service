@@ -10,27 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class GeshiTestResponse {
 
-    private Header header;
-    private Body body;
+    private ComHeaderResp header;
+    private SecBodyResp body;
 
-    @Data
-    public static class Header {
-        /**
-         * 响应码
-         */
-        private String respCode;
-
-        /**
-         * 响应信息
-         */
-        private String respMsg;
-    }
-
-    @Data
-    public static class Body {
-        /**
-         * 格式
-         */
-        private String geShi;
-    }
 }

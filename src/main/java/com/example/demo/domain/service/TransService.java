@@ -1,13 +1,18 @@
 package com.example.demo.domain.service;
 
+import com.example.demo.application.response.*;
 import com.example.demo.application.request.GeshiTestRequest;
 import com.example.demo.application.request.SquareCalculateRequest;
-import com.example.demo.application.response.GeshiTestResponse;
-import com.example.demo.application.response.SquareCalculateResponse;
+import com.example.demo.domain.service.reqeust.GeshiTestBO;
+import com.example.demo.domain.service.reqeust.SecTest2BORequest;
+import com.example.demo.domain.service.response.GeshiTest2Resp;
+import com.example.demo.domain.service.response.SecBOBodyResp;
+import com.example.demo.domain.service.response.SecBOHeaderResp;
+import com.example.demo.domain.service.response.SecBOResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import javax.validation.Valid;
 
 /**
  * 交易 处理
@@ -41,19 +46,44 @@ public class TransService {
      * @param request 请求
      * @return response
      */
-    public GeshiTestResponse geshiTest(GeshiTestRequest request) {
-        GeshiTestResponse response = new GeshiTestResponse();
-        GeshiTestResponse.Header header = new GeshiTestResponse.Header();
-        GeshiTestResponse.Body body = new GeshiTestResponse.Body();
+    public GeshiTest2Resp geshiTest(@Valid GeshiTestRequest request) {
+        log.info("==================进入service==================");
+        log.info("service接收的参数:{}", request);
+        log.info("service获取参数name:{}", request.getName());
+        log.info("service获取参数tranCode:{}", request.getHeader().getTranCode());
 
-        log.info("交易代码：{}",request.getHeader().getTranCode());
-        log.info("格式：{}",request.getBody().getGeShi());
+        // 业务处理
 
-        header.setRespCode("0000");
-        header.setRespMsg("交易成功");
-        response.setHeader(header);
-        body.setGeShi(request.getBody().getGeShi());
-        response.setBody(body);
+        GeshiTest2Resp response = new GeshiTest2Resp();
+        response.setReturnCode("0000");
+        response.setReturnMessage("交易成功");
+
+        return response;
+    }
+
+    /**
+     * 报文格式测试 处理
+     *
+     * @param request 请求
+     * @return response
+     */
+    public GeshiTest2Resp geshiTest2(SecTest2BORequest request) {
+        log.info("==================进入service==================");
+        log.info("service接收的参数:{}", request);
+        log.info("service获取参数name:{}", request.getBody().getName());
+        log.info("service获取参数tranCode:{}", request.getHeader().getTranCode());
+        // 业务处理
+
+//        SecBOResponse response = new SecBOResponse();
+//        SecBOBodyResp body = new SecBOBodyResp();
+//        body.setReturnCode("0000");
+//        body.setReturnMessage("交易成功");
+//        response.setBody(body);
+        // 不用在这里setHeader，直接在切面公共处理
+
+        GeshiTest2Resp response = new GeshiTest2Resp();
+        response.setReturnCode("0000");
+        response.setReturnMessage("交易成功");
 
         return response;
     }
