@@ -68,7 +68,7 @@ public class TestApi {
              ServletOutputStream sos = response.getOutputStream()) {
             int len = 0;
             byte[] bytes = new byte[1024];
-            while ((len = fis.read()) != -1) {
+            while ((len = fis.read(bytes)) != -1) {
                 sos.write(bytes, 0, len);
             }
         } catch (IOException e) {
