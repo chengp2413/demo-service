@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="currentEnv" source="spring.profiles.active"/>
+    <springProperty scope="context" name="applicationName" source="spring.application.name"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- 控制台日志输出格式 -->
+            <pattern>
+                %d{HH:mm:ss.SSS}- %highlight(%-5level) %X{X-B3-TraceId:-} %X{X-B3-SpanId:-} %clr([%thread]) %50.50logger{49}: %cyan(%msg%n)
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- 时间滚动输出（全量日志） -->
+    <appender name="FILE" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+            <key>LOG_NAME</key>
+            <defaultValue>default</defaultValue>
+        </discriminator>
+        <sift class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+            <appender name="${LOG_NAME}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!-- 日志文件输出格式 -->
+                <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                    <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                        <pattern>
+                            %d{HH:mm:ss.SSS} - %-5level %X{X-B3-TraceId:-} %X{X-B3-SpanId:-} [%thread] %50.50logger{49}: %msg%n
+                        </pattern>
+                    </layout>
+                </encoder>
+                <append>true</append>
+                <!-- 日志记录器的滚动策略，按日期、大小记录 -->
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <!-- 每天日志归档路径以及格式 -->
+                    <fileNamePattern>/logs/demo-service/%d{yyyyMMdd}/${LOG_NAME}_%d{yyyyMMdd}_%i.log</fileNamePattern>
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <!-- 每个日志文件最多50M -->
+                        <maxFileSize>50MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                    <!-- 日志文件保留天数 例：比如今天2022-02-24，则会删除2021-10-15到2021-11-15的日志，2021-10-14以前和2021-11-16以后的不会删除 -->
+                    <MaxHistory>100</MaxHistory>
+                    <!-- 日志文件最多保留10G -->
+                    <totalSizeCap>10GB</totalSizeCap>
+                    <!-- 启动时清理日志文件 -->
+                    <cleanHistoryOnStart>true</cleanHistoryOnStart>
+                </rollingPolicy>
+            </appender>
+        </sift>
+    </appender>
+
+    <!-- 时间滚动输出（错误日志） -->
+    <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 日志文件输出格式 -->
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="org.apache.skywalking.apm.toolkit.log.logback.v1.x.TraceIdPatternLogbackLayout">
+                <pattern>
+                    %d{HH:mm:ss.SSS} - %-5level %X{X-B3-TraceId:-} %X{X-B3-SpanId:-} [%thread] %50.50logger{49}: %msg%n
+                </pattern>
+            </layout>
+        </encoder>
+        <append>true</append>
+        <!-- 日志记录器的滚动策略，按日期、大小记录 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 每天日志归档路径以及格式 -->
+            <fileNamePattern>/logs/demo-service/%d{yyyyMMdd}/error_%d{yyyyMMdd}_%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 每个日志文件最多50M -->
+                <maxFileSize>50MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 日志文件保留天数 例：比如今天2022-02-24，则会删除2021-10-15到2021-11-15的日志，2021-10-14以前和2021-11-16以后的不会删除 -->
+            <MaxHistory>100</MaxHistory>
+            <!-- 日志文件最多保留10G -->
+            <totalSizeCap>2GB</totalSizeCap>
+            <!-- 启动时清理日志文件 -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <!-- 异步记录全量日志 -->
+    <appender name="ASYNC-FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 不丢失日志。（默认值为-1，如果队列的80%已满，则会丢弃TRACE、DEBUG、INFO级别的日志）-->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 更改默认的队列的深度，该值会影响性能，默认为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender，最多添加一个 -->
+        <appender-ref ref="FILE"></appender-ref>
+    </appender>
+
+    <!-- 异步记录错误日志 -->
+    <appender name="ASYNC-ERROR" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- 更改默认的队列的深度，该值会影响性能，默认为256 -->
+        <queueSize>512</queueSize>
+        <!-- 添加附加的appender，最多添加一个 -->
+        <appender-ref ref="ERROR_LOG"></appender-ref>
+    </appender>
+
+    <!-- 本地环境 -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="org.springframework" level="INFO"/>
+        <logger name="com.ulisesbocchio" level="INFO"/>
+        <logger name="springfox.documentation" level="INFO"/>
+        <logger name="org.hibernate" level="INFO"/>
+        <logger name="com.netflix" level="INFO"/>
+        <logger name="cn.com.msp.smartcloud" level="INFO"/>
+        <logger name="com.ctrip.framework.apollo" level="INFO"/>
+        <logger name="org.apache.http.wire" level="INFO"/>
+        <logger name="org.apache.http.headers" level="INFO"/>
+    </springProfile>
+
+    <!-- dev，sit环境 -->
+    <springProfile name="dev-prf,dev-oaf,dev-ina,dev-iba,sit-iba,sit-ina,sit-oaf,sit-prf">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC-FILE"/>
+            <appender-ref ref="ASYNC-ERROR"/>
+        </root>
+        <logger name="org.apache.http" level="INFO"/>
+        <logger name="org.apache.skywalking" level="INFO"/>
+        <logger name="org.springframework" level="INFO"/>
+        <logger name="com.ulisesbocchio" level="INFO"/>
+        <logger name="springfox.documentation" level="INFO"/>
+        <logger name="org.hibernate" level="INFO"/>
+        <logger name="com.netflix" level="INFO"/>
+        <logger name="cn.com.msp.smartcloud" level="INFO"/>
+        <logger name="com.ctrip.framework.apollo" level="INFO"/>
+        <logger name="org.apache.http.wire" level="INFO"/>
+        <logger name="org.apache.http.headers" level="INFO"/>
+    </springProfile>
+
+    <!-- uat1，uat2环境 -->
+    <springProfile name="uat-yinzhou-iba,uat-yinzhou-ina,uat-yinzhou-oaf,uat-yinzhou-prf,uat-jiangbei-iba,uat-jiangbei-ina,uat-jiangbei-oaf,uat-jiangbei-prf">
+        <root level="INFO">
+            <appender-ref ref="ASYNC-FILE"/>
+            <appender-ref ref="ASYNC-ERROR"/>
+        </root>
+        <logger name="org.apache.skywalking" level="INFO"/>
+    </springProfile>
+
+    <!-- 生产环境 -->
+    <springProfile name="prod-jiangbei-iba,prod-yinzhou-iba,prod-jiangbei-ina,prod-yinzhou-ina,prod-jiangbei-oaf,prod-yinzhou-oaf,prod-jiangbei-prf,prod-yinzhou-prf">
+        <root level="INFO">
+            <appender-ref ref="ASYNC-FILE"/>
+            <appender-ref ref="ASYNC-ERROR"/>
+        </root>
+        <logger name="org.apache.skywalking" level="INFO"/>
+    </springProfile>
+</configuration>

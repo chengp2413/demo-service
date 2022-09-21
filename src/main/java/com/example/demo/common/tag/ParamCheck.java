@@ -6,10 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 方法内字段判空
+ * 字段判空标签
  *
- * @author 时良宝 k48299
- * @date 2021/6/25
+ * @author chengp
+ * @date 2022/05/17
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -18,7 +18,7 @@ public @interface ParamCheck {
     /**
      * message
      *
-     * @return 自定义信息
+     * @return 自定义返回信息
      */
     String message();
 }

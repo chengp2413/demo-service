@@ -1,7 +1,0 @@
-spring:
-  profiles:
-    active: local
-  system:
-    name: demo-service
-  application:
-    name: demo-service

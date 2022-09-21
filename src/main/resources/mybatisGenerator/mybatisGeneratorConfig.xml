@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+        "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd" >
+
+<generatorConfiguration>
+    <!--数据库驱动路径-->
+    <!--<classPathEntry location="C:\Users\chengp\.m2\repository\com\oracle\ojdbc6\11.2.0.1.0\ojdbc6-11.2.0.1.0.jar"/>-->
+
+    <!--数据库context-->
+    <context id="ORACLE" targetRuntime="MyBatis3">
+        <!--生成java文件编码-->
+        <property name="javaFileEncoding" value="UTF-8"/>
+
+        <!--格式化java代码-->
+        <property name="javaFormatter" value="org.mybatis.generator.api.dom.DefaultJavaFormatter"/>
+
+        <!--修改Example文件名-->
+        <plugin type="org.mybatis.generator.plugins.RenameExampleClassPlugin">
+            <property name="searchString" value="POExample$"/>
+            <property name="replaceString" value="Example"/>
+        </plugin>
+
+        <!--注释配置-->
+        <commentGenerator type="com.example.demo.common.config.MyBatisGenerator">
+            <property name="suppressDate" value="false"/>
+            <property name="dateFormat" value="yyyy-MM-dd HH:mm:ss"/>
+            <property name="suppressAllComments" value="false"/>
+            <property name="addRemarkComments" value="true"/>
+            <property name="author" value="chengp"/>
+        </commentGenerator>
+
+        <!--jdbc连接-->
+        <jdbcConnection driverClass="oracle.jdbc.OracleDriver"
+                        connectionURL="jdbc:oracle:thin:@127.0.0.1:1521/orcl"
+                        userId="chengp" password="chengp">
+            <property name="remarksReporting" value="true"/>
+            <property name="useInformationSchema" value="true"/>
+        </jdbcConnection>
+
+        <!--生成实体类PO的位置-->
+        <javaModelGenerator targetProject="src/main/java"
+                            targetPackage="com.example.demo.infrastructure.persistence.po">
+            <property name="enableSubPackages" value="true"/>
+            <property name="trimStrings" value="true"/>
+        </javaModelGenerator>
+
+        <!--生成Example的位置-->
+        <javaExampleGenerator targetProject="src/main/java"
+                              targetPackage="com.example.demo.infrastructure.persistence.example"/>
+
+        <!--Mapper.xml映射文件的位置-->
+        <sqlMapGenerator targetProject="src/main/resources" targetPackage="sqlmap">
+            <property name="enableSubPackages" value="true"/>
+        </sqlMapGenerator>
+
+        <!--XML对应的Mapper类的包名和位置-->
+        <javaClientGenerator type="XMLMAPPER"
+                             targetProject="src/main/java"
+                             targetPackage="com.example.demo.infrastructure.persistence.mapper">
+            <property name="enableSubPackages" value="false"/>
+        </javaClientGenerator>
+
+        <!--下面是数据库表名和项目中需要生成类的名称，建议和数据库保持一致，如果有多个表，添加多个节点即可-->
+        <table tableName="DEMO_COM_CZLSB" domainObjectName="DemoComCzlsbPO" mapperName="DemoComCzlsbMapper"
+               enableInsert="true"
+               enableDeleteByPrimaryKey="true"
+               enableSelectByPrimaryKey="true"
+               enableUpdateByPrimaryKey="true"
+               enableCountByExample="true"
+               enableDeleteByExample="true"
+               enableSelectByExample="true"
+               enableUpdateByExample="true">
+        </table>
+    </context>
+</generatorConfiguration>

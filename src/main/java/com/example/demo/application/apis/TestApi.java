@@ -1,7 +1,7 @@
 package com.example.demo.application.apis;
 
 import com.example.demo.application.request.SquareCalculateRequest;
-import com.example.demo.application.response.SquareCalculateResponse;
+import com.example.demo.common.util.GetParamUtil;
 import com.example.demo.domain.service.TransService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.Map;
 
 /**
  * 测试api
@@ -29,11 +30,22 @@ import java.net.URLEncoder;
 @RequestMapping("/demo")
 public class TestApi {
 
+    @GetMapping("/test")
+    public String test(HttpServletRequest request) {
+        Map<String, String[]> parameterMap = request.getParameterMap();
+        String str1 = "chengp.pub.testkey";
+        String str2 = "chengp.test.testkey";
+        String apolloParam1 = GetParamUtil.getApolloParam(str1);
+        String apolloParam2 = GetParamUtil.getApolloParam(str2);
+        return apolloParam1 + " -- " + apolloParam2;
+    }
+
     /**
      * 注入服务
      */
     @Autowired
     private TransService transService;
+
 
     /**
      * 平方计算
@@ -43,9 +55,14 @@ public class TestApi {
      */
     @PostMapping("/squareCalculate")
     public Object squareCalculate(@Valid @RequestBody SquareCalculateRequest request) {
-        log.info("进入TestApi");
-        SquareCalculateResponse response = transService.squareCalculate(request);
-        return response;
+//        log.info("进入TestApi");
+//        SquareCalculateResponse response = transService.squareCalculate(request);
+//        String key = "apollo.pub.test";
+//        Config config = ConfigService.getAppConfig();
+//        String value = config.getProperty(key, null);
+        String getenv = System.getProperty("apollo.pub.test");
+        log.info("进入Api,获取参数：{}", getenv);
+        return "success";
     }
 
     @GetMapping("/download")

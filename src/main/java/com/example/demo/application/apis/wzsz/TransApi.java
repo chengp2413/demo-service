@@ -6,14 +6,12 @@ import com.example.demo.application.request.SquareCalculateRequest;
 import com.example.demo.application.response.GeshiTestResponse;
 import com.example.demo.application.response.SecResponse;
 import com.example.demo.application.response.SquareCalculateResponse;
+import com.example.demo.common.util.JsonUtils;
 import com.example.demo.domain.service.TransService;
-import com.example.demo.domain.service.reqeust.GeshiTestBO;
 import com.example.demo.domain.service.reqeust.SecBOHeaderReq;
 import com.example.demo.domain.service.reqeust.SecTest2BOBody;
 import com.example.demo.domain.service.reqeust.SecTest2BORequest;
 import com.example.demo.domain.service.response.GeshiTest2Resp;
-import com.example.demo.domain.service.response.SecBOResponse;
-import com.example.demo.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -66,7 +64,7 @@ public class TransApi {
     public Object geshiTest2(@RequestBody SecRequest request) {
         log.info("==================进入Api==================");
         log.info("api接收的参数{}", request);
-        SecTest2BORequest boRequest = new SecTest2BORequest(); // 这句是
+        SecTest2BORequest boRequest = new SecTest2BORequest();
         boRequest.setHeader(JsonUtils.src2Obj(request.getHeader(), SecBOHeaderReq.class));
         boRequest.setBody(JsonUtils.jsonToBean(request.getBody().getData(), SecTest2BOBody.class));
         GeshiTest2Resp response = transService.geshiTest2(boRequest);

@@ -1,10 +1,11 @@
 package com.example.demo.application.aspect;
 
-import com.example.demo.application.request.SecRequest;
-import com.example.demo.application.request.SzybComRequest;
-import com.example.demo.application.response.*;
-import com.example.demo.utils.JsonUtils;
-import com.sun.xml.internal.ws.api.ha.StickyFeature;
+import cn.hutool.json.JSONUtil;
+import com.example.demo.application.request.ZjybSendRequest;
+import com.example.demo.application.response.ZjybSendResponse;
+import com.example.demo.common.constant.Constants;
+import com.example.demo.common.util.zjyb.SM2Util;
+import com.example.demo.common.util.zjyb.SafeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -12,6 +13,15 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import javax.servlet.http.HttpServletRequest;
+import java.math.BigInteger;
+import java.net.URLDecoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 /**
  * Api切面
@@ -25,7 +35,7 @@ public class ApiAspect {
     /**
      * Api切面层
      */
-    @Pointcut("execution(* com.example.demo.application.apis..*.*(..))")
+    @Pointcut("execution(* com.example.demo.application.apis.zjyb..*.*(..))")
     public void apiPointCut() {
         //Do nothing because of doAround
     }
@@ -36,13 +46,112 @@ public class ApiAspect {
     @Around(value = "apiPointCut()")
     public Object doAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         log.info("==================Api切面开始执行==================");
+        String name = proceedingJoinPoint.getTarget().getClass().getName();
+        String simpleName = proceedingJoinPoint.getTarget().getClass().getSimpleName();
+        String canonicalName = proceedingJoinPoint.getTarget().getClass().getCanonicalName();
+        String name1 = proceedingJoinPoint.getSignature().getName();
         long startTime = System.currentTimeMillis();
-        Object result = proceedingJoinPoint.proceed();
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest httpServletRequest = attributes.getRequest();
+        log.info("请求URL=====>{}", httpServletRequest.getRequestURL().toString());
+        log.info("请求URI=====>{}", httpServletRequest.getRequestURI());
+
+        Object[] args = proceedingJoinPoint.getArgs();
+        String arg = args[0].toString();
+        String requestBody = arg.substring(1, arg.length() - 1);
+        String requestBody1 = URLDecoder.decode(requestBody, "UTF-8");
+        log.info("初始请求报文=====>{}", requestBody1);
+
+//        Object[] args = proceedingJoinPoint.getArgs();
+        Class<?> reqClass = args[0].getClass();
+        Object result = null;
+        ZjybSendRequest request = null;
+        ZjybSendResponse response = new ZjybSendResponse();
+        try {
+            request = (ZjybSendRequest) args[0];
+            log.info("测试初始报文：{}", request);
+            String md5 = this.md5String(request.getJsonData());
+            if (!request.getMd5().equals(md5)) {
+                log.info("MD5校验失败");
+                return "MD5校验失败";
+            }
+            log.info("MD5校验成功");
+            String base64str = SafeUtil.decode(request.getJsonData(), "utf-8");
+            String jsonStr = SM2Util.decrypt(Constants.ZJYB_BANK_PRI, base64str);
+            log.info("解密后业务明文：{}", jsonStr);
+            Object ywObj = JSONUtil.toBean(jsonStr, reqClass);
+            Object[] objects = new Object[1];
+            objects[0] = ywObj;
+            result = proceedingJoinPoint.proceed(objects);
+            String respjsonStr = JSONUtil.toJsonStr(result);
+            log.info("返回业务明文：{}", respjsonStr);
+            String respSM2Str = SM2Util.encrypt(Constants.ZJYB_YB_PUB, respjsonStr);
+            String respBase64Str = SafeUtil.encode(respSM2Str, "utf-8");
+            String respMD5Str = this.md5String(respBase64Str);
+            response.setSid(request.getSid());
+            response.setTxCode(request.getTxCode());
+            response.setOrgCode("222");
+            response.setJsonData(respBase64Str);
+            response.setMd5(respMD5Str);
+            log.info("返回业务密文：{}", JSONUtil.toJsonStr(response));
+        } catch (Exception e) {
+            log.info("==================Api切面异常结束==================");
+            log.info("==================交易执行时间：{}ms", System.currentTimeMillis() - startTime);
+            log.error("进入异常");
+            return "进入异常";
+        }
         log.info("==================Api切面执行结束==================");
         log.info("==================交易执行时间：{}ms", System.currentTimeMillis() - startTime);
-        return result;
+        return response;
 
+    }
 
+    /**
+     * 格式化打印请求
+     *
+     * @param request http请求
+     * @return 请求报文
+     */
+//    private String printToStringByRequest(HttpServletRequest request) {
+//        String body;
+//        try (ServletInputStream inputStream = request.getInputStream()) {
+//            body = IOUtils.toString(inputStream, "utf-8");
+//        } catch (IOException e) {
+//            log.error("http请求打印错误");
+//            body = null;
+//        }
+//        return body;
+//    }
+    private String printToStringByRequest(HttpServletRequest request) {
+        String body;
+        try {
+            Map<String, String[]> parameterMap = request.getParameterMap();
+            body = "123";
+        } catch (Exception e) {
+            log.error("http请求打印错误");
+            body = null;
+        }
+        return body;
+    }
+
+    /**
+     * MD5加签
+     *
+     * @param str 待加签字符串
+     * @return md5字符串
+     */
+    private String md5String(String str) {
+        String md5str;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(str.getBytes());
+            String mdSrc = new BigInteger(1, md.digest()).toString(16);
+            md5str = mdSrc.toUpperCase();
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("MD5加签失败");
+            md5str = null;
+        }
+        return md5str;
     }
 }
 

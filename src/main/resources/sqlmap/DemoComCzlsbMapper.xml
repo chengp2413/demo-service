@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.infrastructure.persistence.mapper.DemoComCzlsbMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.demo.domain.po.DemoComCzlsbPO">
+        <id column="PTLS" property="ptls"/>
+        <result column="PTRQ" property="ptrq"/>
+        <result column="YWZL" property="ywzl"/>
+        <result column="YWBH" property="ywbh"/>
+        <result column="QDBS" property="qdbs"/>
+        <result column="JYLS" property="jyls"/>
+        <result column="JYDM" property="jydm"/>
+        <result column="JYMC" property="jymc"/>
+        <result column="JYRQ" property="jyrq"/>
+        <result column="JYSJ" property="jysj"/>
+        <result column="FWIP" property="fwip"/>
+        <result column="JYZT" property="jyzt"/>
+        <result column="ZTSM" property="ztsm"/>
+        <result column="CJSJ" property="cjsj"/>
+        <result column="GXSJ" property="gxsj"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        PTRQ, PTLS, YWZL, YWBH, QDBS, JYLS, JYDM, JYMC, JYRQ, JYSJ, FWIP, JYZT, ZTSM, CJSJ, GXSJ
+    </sql>
+
+</mapper>

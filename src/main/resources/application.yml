@@ -1,0 +1,56 @@
+#服务器端口
+server:
+  port: 9002
+
+#数据库连接配置
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@127.0.0.1:1521/orcl
+    username: chengp
+    password: chengp
+    driver-class-name: oracle.jdbc.OracleDriver
+  output:
+    ansi:
+      enabled: ALWAYS #ANSI色彩配置
+  profiles:
+    active: local #运行环境
+  application:
+    name: demo-service  #服务名
+
+#mybatis-plus配置
+mybatis-plus:
+  configuration:
+    jdbc-type-for-null: 'null'
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapperLocations: classpath*:sqlmap/*.xml
+
+#日志等级配置
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    org.springframework: WARN
+    com.netflix: WARN
+    org.apache: WARN
+    com.ulisesbocchio: WARN
+    com.example.demo.infrastructure.persistence.mapper: DEBUG
+
+#Apollo配置
+app:
+  id: demo-service
+apollo:
+  cacheDir: ./DEV
+  cluster: default
+  meta: http://127.0.0.1:8089
+  bootstrap:
+    enabled: true
+    namespaces: application
+
+#xxljob配置
+xxljob:
+  executor:
+    addresses: http://127.0.0.1:8088/xxj-job-admin
+    appname: demo-service
+    port: 9999
+    accesstoken: accesstoken
+    logpath: /logs/xxljob/demo-service
+    logretentiondays: 20
